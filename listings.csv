@@ -1,1 +1,4 @@
-title,price,location,url
+title,price,location,url,description,latitude,longitude
+Renovation Cottage,425000,Stratford-upon-Avon,https://example.com/listing1,Charming cottage needing modernisation,52.19173,-1.70738
+Large Farmhouse Project,650000,Warwick,https://example.com/listing2,Farmhouse with great potential,52.2810,-1.5845
+Victorian Terrace,310000,Leamington Spa,https://example.com/listing3,Victorian terrace requiring updating,52.2893,-1.5330
