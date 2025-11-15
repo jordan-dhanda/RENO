@@ -1,4 +1,0 @@
-title,price,price_raw,type,description,lat,lon,source,url,distance_miles
-Renovation Cottage,425000,425000,House,Charming cottage needing modernisation,52.19173,-1.70738,Rightmove,https://example.com/listing1,5
-Large Farmhouse Project,650000,650000,House,Farmhouse with great potential for full renovation,52.2810,-1.5845,Zoopla,https://example.com/listing2,12
-Victorian Terrace Modernisation,310000,310000,House,Victorian terrace requiring substantial updating,52.2893,-1.5330,OnTheMarket,https://example.com/listing3,8
