@@ -182,18 +182,16 @@ else:
     st.stop()
 
 # Sidebar quick controls (global)
-st.sidebar.header("Quick Actions")
-if st.sidebar.button("Run scraper (manual)"):
-    ok, fname, out = run_scraper_and_log()
-    if ok:
-        st.sidebar.success(f"Scraper {fname} ran successfully.")
-    else:
-        if fname:
-            st.sidebar.error(f"Scraper {fname} failed. See log below.")
-        else:
-            st.sidebar.warning(out)
-    with st.expander("Scraper output / log"):
-        st.text(out)
+if st.button("Run Scraper Now"):
+    try:
+        import importlib
+        scraper = importlib.import_module("scrape_listings")
+        st.info("Scraper running... check logs below.")
+        output = scraper.run_scraper()
+        st.success("Scraper finished successfully!")
+    except Exception as e:
+        st.error("Scraper failed.")
+        st.code(str(e))
 
 # -----------------------
 # Tabs: Map / Table / Favourites / Settings
