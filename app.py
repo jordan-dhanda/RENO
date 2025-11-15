@@ -30,7 +30,7 @@ st.set_page_config(page_title="RENO v2.0", layout="wide")
 PLACEHOLDER_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/6/6b/Bitmap_VS_SVG.svg"  # simple placeholder
 CSV_FILE = "listings.csv"
 FAV_FILE = "favourites.csv"
-SCRAPER_FILES = ["scraper.py", "scrape_listings.py", "scrape_listings.py"]  # try any of these when running scraper
+SCRAPER_FILES = ["scrape_listings.py"]
 
 # -----------------------
 # Helper functions
