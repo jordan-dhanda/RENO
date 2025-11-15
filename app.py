@@ -4,72 +4,101 @@ import folium
 from streamlit_folium import st_folium
 import os
 from datetime import datetime
-import subprocess
 
-st.set_page_config(page_title="RENO Dashboard", layout="wide")
-st.title("RENO Dashboard")
+st.set_page_config(page_title="RENO", layout="wide")
+st.title("🏡 RENO Property Dashboard")
 
 CSV_FILE = "listings.csv"
 
-# -------------------------------
-# Function to run scraper manually
-# -------------------------------
-def run_scraper():
-    try:
-        subprocess.run(["python3", "scrape_listings.py"], check=True)
-        st.success("Scraper ran successfully! CSV updated.")
-    except Exception as e:
-        st.error(f"Error running scraper: {e}")
+# -----------------------
+# Load CSV safely
+# -----------------------
+if not os.path.exists(CSV_FILE):
+    st.warning("No listings.csv file found. Please upload it.")
+    st.stop()
 
-# -------------------------------
-# Refresh CSV button
-# -------------------------------
-if st.sidebar.button("Refresh CSV"):
-    run_scraper()
-
-# -------------------------------
-# Try to load listings.csv
-# -------------------------------
 try:
     df = pd.read_csv(CSV_FILE)
-    st.success(f"Loaded {len(df)} listings successfully!")
-    
-    # Show last modified timestamp
-    last_modified = os.path.getmtime(CSV_FILE)
-    last_modified_dt = datetime.fromtimestamp(last_modified)
-    st.info(f"Listings last updated: {last_modified_dt.strftime('%Y-%m-%d %H:%M:%S')}")
-    
-    # -------------------------------
-    # Sidebar filters
-    # -------------------------------
-    st.sidebar.subheader("Filters")
-    max_price = st.sidebar.number_input("Max Price (£)", value=600000, step=50000)
-    keyword_filter = st.sidebar.text_input("Keywords (comma-separated)", value="renovation,modernisation")
-    
-    filtered_df = df[df["price"] <= max_price]
-    keywords = [k.strip().lower() for k in keyword_filter.split(",")]
-    if keywords:
-        filtered_df = filtered_df[filtered_df["title"].str.lower().str.contains("|".join(keywords)) | 
-                                  filtered_df["description"].str.lower().str.contains("|".join(keywords))]
+except Exception as e:
+    st.error(f"Error loading CSV: {e}")
+    st.stop()
 
-    st.subheader(f"Listings Table ({len(filtered_df)})")
-    st.dataframe(filtered_df)
-    
-    # -------------------------------
-    # Map view
-    # -------------------------------
-    st.subheader("Map View")
-    if "lat" in filtered_df.columns and "lon" in filtered_df.columns:
-        m = folium.Map(location=[filtered_df["lat"].mean(), filtered_df["lon"].mean()], zoom_start=10)
-        for _, row in filtered_df.iterrows():
-            folium.Marker(
-                location=[row["lat"], row["lon"]],
-                popup=f"{row['title']} (£{row['price']})\n{row['address']}",
-                tooltip=row['title']
-            ).add_to(m)
-        st_folium(m, width=700)
-    else:
-        st.warning("Latitude and longitude columns missing from CSV.")
+# Validate required columns
+required_cols = ["title", "price", "description", "address", "lat", "lon"]
+missing = [c for c in required_cols if c not in df.columns]
 
-except FileNotFoundError:
-    st.warning("listings.csv not found. Please upload it or run the scraper.")
+if missing:
+    st.error(f"Missing required columns: {missing}")
+    st.stop()
+
+st.success(f"Loaded {len(df)} listings")
+
+# Timestamp
+timestamp = datetime.fromtimestamp(os.path.getmtime(CSV_FILE))
+st.caption(f"Last updated: **{timestamp.strftime('%Y-%m-%d %H:%M:%S')}**")
+
+# ---------------------------------
+# Sidebar Filters
+# ---------------------------------
+st.sidebar.header("Filters")
+
+max_price = st.sidebar.number_input("Max Price (£)", value=600000, step=50000)
+keywords = st.sidebar.text_input("Keywords", value="renovation,modernisation")
+
+kw_list = [k.strip().lower() for k in keywords.split(",") if k.strip()]
+
+# Filter logic
+filtered_df = df[df["price"] <= max_price]
+
+if kw_list:
+    filtered_df = filtered_df[
+        df["description"].str.lower().str.contains("|".join(kw_list)) |
+        df["title"].str.lower().str.contains("|".join(kw_list))
+    ]
+
+st.subheader(f"📋 Filtered Listings ({len(filtered_df)})")
+st.dataframe(filtered_df, height=300)
+
+# ---------------------------------
+# Detail view when clicking a row
+# ---------------------------------
+st.subheader("🔍 Listing Details")
+
+selected_index = st.selectbox(
+    "Choose a listing to inspect:",
+    options=filtered_df.index,
+    format_func=lambda i: filtered_df.loc[i, "title"]
+)
+
+item = filtered_df.loc[selected_index]
+
+st.write(f"### {item['title']}")
+st.write(f"**Price:** £{item['price']:,}")
+st.write(f"**Address:** {item['address']}")
+st.write("**Description:**")
+st.write(item["description"])
+
+# ---------------------------------
+# Map View
+# ---------------------------------
+st.subheader("🗺️ Map View")
+
+m = folium.Map(
+    location=[filtered_df["lat"].mean(), filtered_df["lon"].mean()],
+    zoom_start=11
+)
+
+for _, row in filtered_df.iterrows():
+    popup = (
+        f"<b>{row['title']}</b><br>"
+        f"£{row['price']:,}<br>"
+        f"{row['address']}"
+    )
+
+    folium.Marker(
+        location=[row["lat"], row["lon"]],
+        popup=popup,
+        tooltip=row["title"]
+    ).add_to(m)
+
+st_folium(m, height=500, width=900)
