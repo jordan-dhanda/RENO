@@ -192,6 +192,12 @@ if st.button("Run Scraper Now"):
     except Exception as e:
         st.error("Scraper failed.")
         st.code(str(e))
+st.subheader("Scraper Logs")
+try:
+    logs = open("scraper_log.txt").read()
+    st.text(logs)
+except:
+    st.write("No logs yet.")
 
 # -----------------------
 # Tabs: Map / Table / Favourites / Settings
